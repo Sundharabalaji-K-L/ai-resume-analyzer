@@ -6,7 +6,7 @@ declare global {
             auth: {
                 getUser: () => Promise<PuterUser>;
                 isSignedIn: () => Promise<boolean>;
-                signIn: () => Promise<void>;
+                signIn: (options?: { attempt_temp_user_creation?: boolean }) => Promise<void>;
                 signOut: () => Promise<void>;
             };
             fs: {
@@ -49,7 +49,7 @@ interface PuterStore {
     auth: {
         user: PuterUser | null;
         isAuthenticated: boolean;
-        signIn: () => Promise<void>;
+        signIn: (options?: { attempt_temp_user_creation?: boolean }) => Promise<void>;
         signOut: () => Promise<void>;
         refreshUser: () => Promise<void>;
         checkAuthStatus: () => Promise<boolean>;
@@ -165,7 +165,8 @@ export const usePuterStore = create<PuterStore>((set, get) => {
         }
     };
 
-    const signIn = async (): Promise<void> => {
+    // ✅ updated to support options
+    const signIn = async (options?: { attempt_temp_user_creation?: boolean }): Promise<void> => {
         const puter = getPuter();
         if (!puter) {
             setError("Puter.js not available");
@@ -175,7 +176,11 @@ export const usePuterStore = create<PuterStore>((set, get) => {
         set({ isLoading: true, error: null });
 
         try {
-            await puter.auth.signIn();
+            if (options) {
+                await puter.auth.signIn(options);
+            } else {
+                await puter.auth.signIn();
+            }
             await checkAuthStatus();
         } catch (err) {
             const msg = err instanceof Error ? err.message : "Sign in failed";
@@ -321,7 +326,6 @@ export const usePuterStore = create<PuterStore>((set, get) => {
             setError("Puter.js not available");
             return;
         }
-        // return puter.ai.chat(prompt, imageURL, testMode, options);
         return puter.ai.chat(prompt, imageURL, testMode, options) as Promise<
             AIResponse | undefined
         >;
@@ -418,7 +422,7 @@ export const usePuterStore = create<PuterStore>((set, get) => {
         auth: {
             user: null,
             isAuthenticated: false,
-            signIn,
+            signIn: (options?: { attempt_temp_user_creation?: boolean }) => signIn(options),
             signOut,
             refreshUser,
             checkAuthStatus,

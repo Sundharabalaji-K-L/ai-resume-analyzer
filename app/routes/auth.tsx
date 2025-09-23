@@ -37,7 +37,7 @@ const Auth = () => {
                                         <p>Log Out</p>
                                     </button>
                                 ) : (
-                                    <button className="auth-button" onClick={auth.signIn}>
+                                    <button className="auth-button" onClick={() => auth.signIn({attempt_temp_user_creation: false})}>
                                         <p>Log In</p>
                                     </button>
                                 )}
